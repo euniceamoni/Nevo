@@ -74,6 +74,13 @@ pub trait CrowdfundingTrait {
         new_deadline: u64,
     ) -> Result<(), CrowdfundingError>;
 
+    fn claim_campaign_funds(env: Env, campaign_id: BytesN<32>) -> Result<(), CrowdfundingError>;
+
+    fn batch_claim_campaign_funds(
+        env: Env,
+        campaign_ids: Vec<BytesN<32>>,
+    ) -> Vec<Result<(), CrowdfundingError>>;
+
     fn get_campaign_fee_history(
         env: Env,
         campaign_id: BytesN<32>,

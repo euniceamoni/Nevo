@@ -802,6 +802,69 @@ impl CrowdfundingTrait for CrowdfundingContract {
         Ok(())
     }
 
+    fn claim_campaign_funds(env: Env, campaign_id: BytesN<32>) -> Result<(), CrowdfundingError> {
+        if Self::is_paused(env.clone()) {
+            return Err(CrowdfundingError::ContractPaused);
+        }
+
+        let campaign = Self::get_campaign(env.clone(), campaign_id.clone())?;
+        campaign.creator.require_auth();
+
+        let claimed_key = StorageKey::CampaignClaimed(campaign_id.clone());
+        if env.storage().instance().has(&claimed_key) {
+            return Err(CrowdfundingError::CampaignAlreadyFunded);
+        }
+
+        if campaign.total_raised < campaign.goal {
+            return Err(CrowdfundingError::CampaignExpired);
+        }
+
+        let fee_history_key = StorageKey::CampaignFeeHistory(campaign_id.clone());
+        let total_fee: i128 = env
+            .storage()
+            .persistent()
+            .get(&fee_history_key)
+            .unwrap_or(0);
+        let amount_to_creator = campaign.total_raised - total_fee;
+
+        if amount_to_creator > 0 {
+            use soroban_sdk::token;
+            let token_client = token::Client::new(&env, &campaign.token_address);
+            token_client.transfer(
+                &env.current_contract_address(),
+                &campaign.creator,
+                &amount_to_creator,
+            );
+        }
+
+        if total_fee > 0 {
+            let platform_fees_key = StorageKey::PlatformFees;
+            let current_fees: i128 = env
+                .storage()
+                .instance()
+                .get(&platform_fees_key)
+                .unwrap_or(0);
+            env.storage()
+                .instance()
+                .set(&platform_fees_key, &(current_fees + total_fee));
+        }
+
+        env.storage().instance().set(&claimed_key, &true);
+
+        Ok(())
+    }
+
+    fn batch_claim_campaign_funds(
+        env: Env,
+        campaign_ids: Vec<BytesN<32>>,
+    ) -> Vec<Result<(), CrowdfundingError>> {
+        let mut results = Vec::new(&env);
+        for id in campaign_ids.iter() {
+            results.push_back(Self::claim_campaign_funds(env.clone(), id.clone()));
+        }
+        results
+    }
+
     fn get_campaigns(env: Env, ids: Vec<BytesN<32>>) -> Vec<CampaignDetails> {
         let mut results = Vec::new(&env);
         for id in ids.iter() {
