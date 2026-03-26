@@ -1935,4 +1935,9 @@ impl SecondCrowdfundingTrait for CrowdfundingContract {
         let _ = env;
         Ok(())
     }
+
+    fn withdraw_event_funds(env: Env, _event_id: BytesN<32>) -> Result<(), SecondCrowdfundingError> {
+        let _ = env;
+        Ok(())
+    }
 }
