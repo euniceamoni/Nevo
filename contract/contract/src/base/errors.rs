@@ -22,7 +22,7 @@ pub enum CrowdfundingError {
     InvalidAmount = 16,
     TokenTransferFailed = 17,
     InvalidMultiSigConfig = 18,
-    NotAuthorizedSigner = 19,
+    EventAlreadyDrained = 19,
     AlreadyApproved = 20,
     DisbursementNotFound = 21,
     DisbursementAlreadyExecuted = 22,
@@ -54,7 +54,6 @@ pub enum CrowdfundingError {
     InsufficientFees = 48,
     UserBlacklisted = 49,
     CampaignCancelled = 50,
-    EventAlreadyDrained = 51,
 }
 
 #[contracterror]
