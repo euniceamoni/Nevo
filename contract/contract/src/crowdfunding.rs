@@ -1025,6 +1025,7 @@ impl CrowdfundingTrait for CrowdfundingContract {
                 Some(MultiSigConfig {
                     required_signatures: req_sigs,
                     signers: signer_list,
+                    allow_event_withdrawal: false,
                 })
             }
             (None, None) => None,
